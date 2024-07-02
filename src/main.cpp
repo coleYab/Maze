@@ -38,7 +38,9 @@ World_t world = {
 Screen_t screen = {nullptr, nullptr, nullptr, {{0}}};
 
 
-
+/**
+ * reset_game_buffer - sets all the game buffers to 0.
+ */
 void reset_game_buffer()
 {
 	for (int y = 0; y < SCREEN_HEIGHT; ++y)

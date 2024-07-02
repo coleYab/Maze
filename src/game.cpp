@@ -2,7 +2,7 @@
 #include <SDL2/SDL.h>
 
 /**
- * game_loop - main game loop that runs our game.
+ * game_loop - main game logic that runs our game.
  */
 void game_loop()
 {

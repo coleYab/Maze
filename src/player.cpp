@@ -3,6 +3,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_keyboard.h>
 
+/**
+ * move_player - function to move the player through the maze.
+ */
 void move_player()
 {
 	const Uint8 *state = SDL_GetKeyboardState(NULL);

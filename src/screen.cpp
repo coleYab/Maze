@@ -67,7 +67,8 @@ void init_game()
 		exit(1);
 	}
 
-	screen.texture = SDL_CreateTexture(screen.renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+	screen.texture = SDL_CreateTexture(screen.renderer, SDL_PIXELFORMAT_ARGB8888,
+				SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 	if (screen.texture == nullptr)
 	{
 		std::cerr << "No texture created\n";
