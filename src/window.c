@@ -50,3 +50,17 @@ void init_game(GameWindow_t *gw)
 		exit(1);
 	}
 }
+
+/**
+ * render - renders a texture into the winodw.
+ *
+ * @gw: game window type.
+ * @texture: the texture to be rendered.
+ */
+void render(GameWindow_t *gw, SDL_Texture *texture)
+{
+	SDL_UpdateTexture(texture, NULL, gw->buffer, SCREEN_WIDTH * sizeof(Uint32));
+	SDL_RenderClear(gw->renderer);
+	SDL_RenderCopy(gw->renderer, texture, NULL, NULL);
+	SDL_RenderPresent(gw->renderer);
+}

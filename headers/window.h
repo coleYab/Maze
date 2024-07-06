@@ -12,9 +12,12 @@ typedef struct GameWindow
     SDL_Window *window;
     SDL_Renderer *renderer;
     bool instantiated;
+    Uint32 buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 } GameWindow_t;
 
 void init_game(GameWindow_t *gw);
 void destroy_game(GameWindow_t *gw);
+void game_loop(GameWindow_t *gw);
+void render(GameWindow_t *gw, SDL_Texture *);
 
 #endif

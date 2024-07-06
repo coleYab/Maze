@@ -8,11 +8,11 @@
  */
 int main(void)
 {
-    GameWindow_t gw = {NULL, NULL, false};
+	GameWindow_t gw = {NULL, NULL, false, {{0}}};
 
-    init_game(&gw);
-    SDL_Delay(1000 * 5);
-    destroy_game(&gw);
+	init_game(&gw);
+	game_loop(&gw);
+	destroy_game(&gw);
 
-    return (EXIT_SUCCESS);
+	return (EXIT_SUCCESS);
 }
