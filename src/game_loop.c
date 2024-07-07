@@ -1,4 +1,4 @@
-#include "../headers/window.h"
+#include "../headers/game.h"
 #include <stdbool.h>
 
 /**
@@ -28,8 +28,9 @@ bool is_exit_event(SDL_Event *event)
  *              whole game.
  *
  * @gw: it is game window.
+ * @player: the player.
  */
-void game_loop(GameWindow_t *gw)
+void game_loop(GameWindow_t *gw, Player_t *player)
 {
 	bool running = true;
 	SDL_Event event;
@@ -41,6 +42,9 @@ void game_loop(GameWindow_t *gw)
 
 	while (running)
 	{
+		reset_game_buffer(gw);
+		move_player(player);
+		draw_world(gw, player);
 		render(gw, texture);
 		SDL_Delay(16);
 		running = !is_exit_event(&event);
