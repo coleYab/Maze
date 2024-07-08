@@ -53,7 +53,7 @@ void cast_rays(RayCaster_t *raycaster, Player_t *player)
 			raycaster->sideDistY += raycaster->deltaDistY,
 			player->mapY += raycaster->stepY, raycaster->side = 1;
 
-		if (WorldMap[player->mapX][player->mapY] > 0)
+		if (raycaster->map->map[player->mapX][player->mapY] > 0)
 			raycaster->hit = 1;
 	}
 
@@ -82,12 +82,14 @@ void cast_rays(RayCaster_t *raycaster, Player_t *player)
  *
  * @gw: game window.
  * @player: player.
+ * @map: the map for the player.
 */
-void draw_world(GameWindow_t *gw, Player_t *player)
+void draw_world(GameWindow_t *gw, Player_t *player, Map_t *map)
 {
 	RayCaster_t raycaster;
 	Uint32 color = rgb(122, 122, 122);
 
+	raycaster.map = map;
 	for (int y = 0; y < SCREEN_HEIGHT; y++)
 	{
 		float rayDirX0 = player->dirX - player->planeX;
@@ -115,7 +117,7 @@ void draw_world(GameWindow_t *gw, Player_t *player)
 	{
 		set_horizontal_raycaster_values(&raycaster, player, x);
 		cast_rays(&raycaster, player);
-		color = get_color_from_map(player->mapX, player->mapY);
+		color = get_color_from_map(map->map, player->mapX, player->mapY);
 		if (raycaster.side == 1)
 			color /= 1.14;
 		draw_vertical_line(

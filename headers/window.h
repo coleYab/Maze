@@ -18,7 +18,6 @@ typedef struct GameWindow
 
 void init_game(GameWindow_t *gw);
 void destroy_game(GameWindow_t *gw);
-void game_loop(GameWindow_t *gw, Player_t *player);
 void render(GameWindow_t *gw, SDL_Texture *);
 
 #endif

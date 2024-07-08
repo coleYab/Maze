@@ -30,7 +30,7 @@ bool is_exit_event(SDL_Event *event)
  * @gw: it is game window.
  * @player: the player.
  */
-void game_loop(GameWindow_t *gw, Player_t *player)
+void game_loop(GameWindow_t *gw, Player_t *player, Map_t *map)
 {
 	bool running = true;
 	SDL_Event event;
@@ -44,7 +44,8 @@ void game_loop(GameWindow_t *gw, Player_t *player)
 	{
 		reset_game_buffer(gw);
 		move_player(player);
-		draw_world(gw, player);
+		draw_world(gw, player, map);
+		draw_minimap(gw, player, map);
 		render(gw, texture);
 		SDL_Delay(16);
 		running = !is_exit_event(&event);

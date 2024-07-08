@@ -55,11 +55,11 @@ Uint32 rgb(Uint8 r, Uint8 g, Uint8 b)
  *
  * Return: the color at that stage.
  */
-Uint32 get_color_from_map(int mapX, int mapY)
+Uint32 get_color_from_map(int **map, int mapX, int mapY)
 {
 	Uint32 color;
 
-	switch (WorldMap[mapX][mapY])
+	switch (map[mapX][mapY])
 	{
 	case 4:
 		color = rgb(255, 0, 0);

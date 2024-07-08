@@ -1,6 +1,8 @@
 #ifndef __RAYCASTER_TOOLS
 #define __RAYCASTER_TOOLS
 
+#include "map.h"
+
 typedef struct {
 	double rayDirX;
 	double rayDirY;
@@ -16,6 +18,7 @@ typedef struct {
 	int lineHeight;
 	int drawStart;
 	int drawEnd;
+	Map_t *map;
 } RayCaster_t;
 
 
