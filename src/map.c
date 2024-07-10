@@ -1,5 +1,4 @@
-#include "../headers/game.h"
-#include "../headers/map.h"
+#include "../headers/main.h"
 
 int WorldMap[MAP_HEIGHT][MAP_WIDTH] = {
 		{4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4},
@@ -59,9 +58,9 @@ void draw_minimap(GameWindow_t *gw, Player_t *player, Map_t *map)
 	int player_minimap_x = MINIMAP_X_OFFSET + player->posX * MINIMAP_SCALE;
 	int player_minimap_y = MINIMAP_Y_OFFSET + player->posY * MINIMAP_SCALE;
 
-	for (int i = 0; i < MINIMAP_SCALE; i++)
+	for (int i = -(MINIMAP_SCALE / 2); i < MINIMAP_SCALE / 2; i++)
 	{
-		for (int j = 0; j < MINIMAP_SCALE; j++)
+		for (int j = -(MINIMAP_SCALE / 2); j < MINIMAP_SCALE / 2; j++)
 			gw->buffer[player_minimap_y + i][
 				player_minimap_x + j] = player_color;
 	}
@@ -125,10 +124,10 @@ int** read_map(Map_t *map, const char *file_path) {
 	}
 
 	read_map_items(file, map);
-	
+
 	for (int i = map->rows; i < max_rows; i++)
 		free(map->map[i]);
-	
+
 	fclose(file);
 	return map->map;
 }

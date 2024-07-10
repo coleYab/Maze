@@ -1,8 +1,6 @@
 #ifndef __RAYCASTER_TOOLS
 #define __RAYCASTER_TOOLS
 
-#include "map.h"
-
 typedef struct {
 	double rayDirX;
 	double rayDirY;

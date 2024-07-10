@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include "player.h"
+#include "textures.h"
 
 #define SCREEN_WIDTH 1200
 #define SCREEN_HEIGHT 720
@@ -14,6 +15,7 @@ typedef struct GameWindow
     SDL_Renderer *renderer;
     bool instantiated;
     Uint32 buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+    GameTexture_t *gt;
 } GameWindow_t;
 
 void init_game(GameWindow_t *gw);

@@ -1,0 +1,8 @@
+{
+    "makefile.buildLog": "/",
+    "files.associations": {
+        "textures.h": "c",
+        "window.h": "c",
+        "main.h": "c"
+    }
+}

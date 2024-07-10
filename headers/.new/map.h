@@ -1,8 +1,9 @@
 #ifndef __GAME_MAP
 #define __GAME_MAP
 
+#include  "map.h"
+#include "player.h" 
 #include "window.h"
-#include "player.h"
 
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24

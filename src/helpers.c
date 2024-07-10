@@ -1,4 +1,4 @@
-#include "../headers/game.h"
+#include "../headers/main.h"
 
 /**
  * reset_game_buffer - sets all the game buffers to 0.

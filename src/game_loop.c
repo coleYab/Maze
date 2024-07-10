@@ -1,4 +1,4 @@
-#include "../headers/game.h"
+#include "../headers/main.h"
 #include <stdbool.h>
 
 /**
@@ -43,9 +43,10 @@ void game_loop(GameWindow_t *gw, Player_t *player, Map_t *map)
 	while (running)
 	{
 		reset_game_buffer(gw);
-		move_player(player);
+		move_player(gw, player);
 		draw_world(gw, player, map);
-		draw_minimap(gw, player, map);
+		if (gw->display_map)
+			draw_minimap(gw, player, map);
 		render(gw, texture);
 		SDL_Delay(16);
 		running = !is_exit_event(&event);

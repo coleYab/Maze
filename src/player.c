@@ -1,12 +1,13 @@
-#include "../headers/game.h"
+#include "../headers/main.h"
 #include <SDL2/SDL_keyboard.h>
 
 /**
  * move_player - function to move the player through the maze.
  *
+ * @gw: game window.
  * @player: the player to move.
  */
-void move_player(Player_t *player)
+void move_player(GameWindow_t *gw, Player_t *player)
 {
 	const Uint8 *state = SDL_GetKeyboardState(NULL);
 	double oldDirX, oldPlaneX;
@@ -55,4 +56,7 @@ void move_player(Player_t *player)
 		player->planeY = oldPlaneX * sin(-ROTATION_SPEED
 			) + player->planeY * cos(-ROTATION_SPEED);
 	}
+	if (state[SDL_SCANCODE_M] && (state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL]))
+		gw->display_map = !(gw->display_map);
+
 }
