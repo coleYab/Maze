@@ -50,6 +50,7 @@ Uint32 rgb(Uint8 r, Uint8 g, Uint8 b)
 /**
  * get_color_from_map - returns the specific color in a map.
  *
+ * @map: map to refer from.
  * @mapX: the X coordinate.
  * @mapY: the y coordinate.
  *

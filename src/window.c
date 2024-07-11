@@ -2,18 +2,23 @@
 #include <stdio.h>
 
 /**
- * destroy_game - deallocates all the game resources.
+ * leave_game - deallocates all the game resources.
  *
  * @gw: game window.
+ * @exit_status: the exit status for the window.
  */
-void destroy_game(GameWindow_t *gw)
+void leave_game(GameWindow_t *gw, int exit_status)
 {
 	if (gw->renderer)
 		SDL_DestroyRenderer(gw->renderer);
 	if (gw->window)
 		SDL_DestroyWindow(gw->window);
 
+	IMG_Quit();
+
 	SDL_Quit();
+
+	exit(exit_status);
 }
 
 /**
@@ -23,7 +28,8 @@ void destroy_game(GameWindow_t *gw)
  */
 void init_game(GameWindow_t *gw)
 {
-	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	if ((SDL_Init(SDL_INIT_VIDEO) != 0) &&
+		((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) != IMG_INIT_PNG))
 	{
 		fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
 		exit(1);
@@ -46,8 +52,7 @@ void init_game(GameWindow_t *gw)
 	if (gw->renderer == NULL)
 	{
 		fprintf(stderr, "SDL_CreateRenderer Error: %s\n", SDL_GetError());
-		destroy_game(gw);
-		exit(1);
+		leave_game(gw, EXIT_FAILURE);
 	}
 }
 

@@ -29,6 +29,7 @@ bool is_exit_event(SDL_Event *event)
  *
  * @gw: it is game window.
  * @player: the player.
+ * @map: the map to be used.
  */
 void game_loop(GameWindow_t *gw, Player_t *player, Map_t *map)
 {
@@ -43,13 +44,13 @@ void game_loop(GameWindow_t *gw, Player_t *player, Map_t *map)
 	while (running)
 	{
 		reset_game_buffer(gw);
-		move_player(gw, player);
+		handle_keyboard(gw, map, player);
 		draw_world(gw, player, map);
 		if (gw->display_map)
 			draw_minimap(gw, player, map);
 		render(gw, texture);
 		SDL_Delay(16);
-		running = !is_exit_event(&event);
+		running = !is_exit_event(&event) || (gw->game_state == GAME_END);
 	}
 
 	SDL_DestroyTexture(texture);

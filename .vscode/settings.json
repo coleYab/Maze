@@ -3,6 +3,8 @@
     "files.associations": {
         "textures.h": "c",
         "window.h": "c",
-        "main.h": "c"
-    }
+        "main.h": "c",
+        "stdio.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
