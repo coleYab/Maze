@@ -51,7 +51,7 @@ Here are some screenshots from our project:
 
 ![Gameplay Screenshot](pics/readme/maze_look.png)
 ![Minimap Screenshot](pics/readme/map.png)
-![Custom textures](pics/readme/custom_texture.png)
+![Custom textures](pics/readme/custom_textures.png)
 
 ## Installation
 To run the Maze Game on your local machine, follow these steps:
