@@ -50,8 +50,8 @@ The core algorithm behind the Maze Game is ray casting. Here's a detailed explan
 Here are some screenshots from our project:
 
 ![Gameplay Screenshot](pics/readme/maze_look.png)
-![Minimap Screenshot](path/readme/map.png)
-![Custom textures](path/readme/custom_texture.png)
+![Minimap Screenshot](pics/readme/map.png)
+![Custom textures](pics/readme/custom_texture.png)
 
 ## Installation
 To run the Maze Game on your local machine, follow these steps:
