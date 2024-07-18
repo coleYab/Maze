@@ -50,7 +50,7 @@ void game_loop(GameWindow_t *gw, Player_t *player, Map_t *map)
 			draw_minimap(gw, player, map);
 		render(gw, texture);
 		SDL_Delay(16);
-		running = !is_exit_event(&event) || (gw->game_state == GAME_END);
+		running = (!is_exit_event(&event)) && (gw->game_state != GAME_END);
 	}
 
 	SDL_DestroyTexture(texture);

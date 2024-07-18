@@ -1,4 +1,5 @@
 #include "../headers/main.h"
+#include <stdlib.h>
 
 /**
  * draw_minimap - draws a mini-map on the screen.
@@ -150,7 +151,9 @@ void free_map(Map_t *map)
 void parse_game_map(int argc, char *argv[], Map_t *map)
 {
 	if (argc != 2)
-		perror("Usage maze <path to the file>\n");
-	else
-		read_map(map, argv[1]);
+    {
+		perror("Usage maze <path to the file> ");
+        exit(EXIT_FAILURE);
+    }
+	read_map(map, argv[1]);
 }

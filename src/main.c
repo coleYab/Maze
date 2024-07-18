@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
 	GameTexture_t gt = {NULL};
 
 	gw.gt = &gt;
-	allocate_textures(&gt);
 	parse_game_map(argc, argv, &map);
+	allocate_textures(&gt);
 	init_game(&gw);
 	game_loop(&gw, &player, &map);
 	free_textures(&gt);
