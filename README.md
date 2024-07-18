@@ -1,6 +1,6 @@
 # Maze Game
 
-![Maze Game Screenshot](pics/readme/maze.png)
+![Maze Game Screenshot](pics/readme/maze_logo.png)
 
 ## Introduction
 Welcome to the Maze Game, a 3D maze exploration game built with SDL2. Navigate through the maze, find your way out, and enjoy the thrill of discovery! This project demonstrates the use of ray casting for rendering a 3D maze and provides a fun and interactive gameplay experience.
