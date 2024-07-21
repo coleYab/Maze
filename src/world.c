@@ -24,21 +24,21 @@ void manage_current_texture(RayCaster_t *raycaster,
 					* raycaster->rayDirX);
 
 	wallX -= floor((wallX));
-	texX = (int)(wallX * (double)(texWidth));
+	texX = (int)(wallX * (double)(TEXTURE_WIDTH));
 
 	if (raycaster->side == 0 && raycaster->rayDirX > 0)
-		texX = texWidth - texX - 1;
+		texX = TEXTURE_WIDTH - texX - 1;
 	if (raycaster->side == 1 && raycaster->rayDirY < 0)
-		texX = texWidth - texX - 1;
+		texX = TEXTURE_WIDTH - texX - 1;
 
-	step = 1.0 * texHeight / raycaster->lineHeight;
+	step = 1.0 * TEXTURE_HEIGHT / raycaster->lineHeight;
 	texPos = (raycaster->drawStart - SCREEN_HEIGHT / 2
 				+ raycaster->lineHeight / 2) * step;
 	for (int y = raycaster->drawStart; y < raycaster->drawEnd; y++)
 	{
-		texY = (int)texPos & (texHeight - 1);
+		texY = (int)texPos & (TEXTURE_HEIGHT - 1);
 		texPos += step;
-		color = gw->gt->texture[texNum][texWidth * texY + texX];
+		color = gw->gt->texture[texNum][TEXTURE_WIDTH * texY + texX];
 		/* making the color darker */
 		if (raycaster->side == 1)
 			color = (color >> 1) & 8355711;

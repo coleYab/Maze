@@ -137,18 +137,18 @@ void draw_floor_celling(GameWindow_t *gw, Player_t *player)
 		{
 			cellX = (int)(floorX), cellY = (int)(floorY);
 
-			tx = (int)(texWidth * (floorX - cellX)) & (texWidth - 1);
-			ty = (int)(texHeight * (floorY - cellY)) & (texHeight - 1);
+			tx = (int)(TEXTURE_WIDTH * (floorX - cellX)) & (TEXTURE_WIDTH - 1);
+			ty = (int)(TEXTURE_HEIGHT * (floorY - cellY)) & (TEXTURE_HEIGHT - 1);
 
 			floorX += floorStepX, floorY += floorStepY;
 			floorTexture = 3, ceilingTexture = 6;
 
 			/* rendering the floor */
-			color = gw->gt->texture[floorTexture][texWidth * ty + tx];
+			color = gw->gt->texture[floorTexture][TEXTURE_WIDTH * ty + tx];
 			gw->buffer[y][x] = ((color >> 1) & 8355711);
 
 			/* rendering the floor */
-			color = gw->gt->texture[ceilingTexture][texWidth * ty + tx];
+			color = gw->gt->texture[ceilingTexture][TEXTURE_WIDTH * ty + tx];
 			gw->buffer[SCREEN_HEIGHT - y - 1][x] = ((color >> 1) & 8355711);
 		}
 	}

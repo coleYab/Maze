@@ -1,0 +1,869 @@
+#include "../headers/main.h"
+#include <stdbool.h>
+
+/**
+ * is_exit_event - checks if the user wants to exit the program.
+ *
+ * @event: the event to be polled.
+ *
+ * Return: true if the user wants to exit otherwise false.
+ */
+bool is_exit_event(SDL_Event *event)
+{
+	if (event)
+	{
+		while (SDL_PollEvent(event))
+		{
+			if (event->type == SDL_QUIT)
+				return (true);
+		}
+	}
+
+	return (false);
+}
+
+
+/**
+ * game_loop - main game loop that will run the
+ *              whole game.
+ *
+ * @gw: it is game window.
+ * @player: the player.
+ * @map: the map to be used.
+ */
+void game_loop(GameWindow_t *gw, Player_t *player, Map_t *map)
+{
+	bool running = true;
+	SDL_Event event;
+		SDL_Texture *texture = SDL_CreateTexture(
+			gw->renderer, SDL_PIXELFORMAT_ABGR8888,
+			SDL_TEXTUREACCESS_STREAMING,
+			SCREEN_WIDTH, SCREEN_HEIGHT
+		);
+
+	while (running)
+	{
+		reset_game_buffer(gw);
+		handle_keyboard(gw, map, player);
+		draw_world(gw, player, map);
+		if (gw->display_map)
+			draw_minimap(gw, player, map);
+		render(gw, texture);
+		SDL_Delay(16);
+		running = (!is_exit_event(&event)) && (gw->game_state != GAME_END);
+	}
+
+	SDL_DestroyTexture(texture);
+}
+#include "../headers/main.h"
+
+/**
+ * reset_game_buffer - sets all the game buffers to 0.
+ *
+ * @gw: the game window.
+ */
+void reset_game_buffer(GameWindow_t *gw)
+{
+	for (int y = 0; y < SCREEN_HEIGHT; ++y)
+	{
+		for (int x = 0; x < SCREEN_WIDTH; ++x)
+			gw->buffer[y][x] = 0;
+	}
+}
+
+/**
+ * draw_vertical_line - function to draw vertical line.
+ *
+ * @gw: game window.
+ * @x: the colmun.
+ * @start: the starting row.
+ * @end: the ending row.
+ * @color: specific color to draw.
+ */
+void draw_vertical_line(
+	GameWindow_t *gw, int x, int start, int end, Uint32 color)
+{
+	for (int y = start; y < end; y++)
+	{
+		gw->buffer[y][x] = color;
+	}
+}
+
+/**
+ * rgb - function to turn the rgb values to their color representation.
+ *
+ * @r: the red value.
+ * @g: the green value.
+ * @b: the blue value.
+ *
+ * Return: the specific color.
+ */
+Uint32 rgb(Uint8 r, Uint8 g, Uint8 b)
+{
+	return ((r << 16) | (g << 8) | b);
+}
+
+
+/**
+ * get_color_from_map - returns the specific color in a map.
+ *
+ * @map: map to refer from.
+ * @mapX: the X coordinate.
+ * @mapY: the y coordinate.
+ *
+ * Return: the color at that stage.
+ */
+Uint32 get_color_from_map(int **map, int mapX, int mapY)
+{
+	Uint32 color;
+
+	switch (map[mapX][mapY])
+	{
+	case 4:
+		color = rgb(255, 0, 0);
+		break;
+	case 2:
+		color = rgb(0, 255, 0);
+		break;
+	case 3:
+		color = rgb(0, 0, 255);
+		break;
+	case 1:
+		color = rgb(255, 255, 255);
+		break;
+	case 5:
+		color = rgb(255, 255, 0);
+		break;
+	case 6:
+		color = rgb(0, 255, 255);
+		break;
+	case 7:
+		color = rgb(255, 0, 255);
+		break;
+	case 8:
+		color = rgb(128, 128, 128);
+		break;
+	default:
+		color = rgb(0, 0, 0);
+		break;
+	}
+
+	return (color);
+}
+#include "../headers/main.h"
+
+/**
+ * main - entry point for the game.
+ *
+ * @argc: argument count.
+ * @argv: argument vector.
+ *
+ * Return: 1 - in failure otherwise 0.
+ */
+int main(int argc, char *argv[])
+{
+	GameWindow_t gw = {NULL, NULL, false, {{0}}, NULL, true, {0}, GAME_START};
+	Map_t map = {NULL, 0, 0};
+	Player_t player = {
+		22.0, 11.5, /* posn*/
+		-1.0, 0.0, /* direction */
+		0.0, 0.66, /* plane */
+		0.0, 0.0,
+		0, 0
+	};
+	GameTexture_t gt = {NULL};
+
+	gw.gt = &gt;
+	parse_game_map(argc, argv, &map);
+	allocate_textures(&gt);
+	init_game(&gw);
+	game_loop(&gw, &player, &map);
+	free_textures(&gt);
+	free_map(&map);
+	leave_game(&gw, EXIT_SUCCESS);
+
+	return (EXIT_SUCCESS);
+}
+#include "../headers/main.h"
+#include <stdlib.h>
+
+/**
+ * draw_minimap - draws a mini-map on the screen.
+ *
+ * @gw: game window.
+ * @player: player.
+ * @map: the map.
+ */
+void draw_minimap(GameWindow_t *gw, Player_t *player, Map_t *map)
+{
+	Uint32 wall_color = rgb(200, 200, 200), player_color = rgb(0, 0, 0);
+	Uint32 direction_color = rgb(0, 255, 0);
+	int x, y, player_minimap_x, player_minimap_y, line_length, line_thickness,
+		dx, dy;
+
+	for (int y = 0; y < map->rows; y++)
+		for (int x = 0; x < map->cols; x++)
+			if (map->map[x][y] > 0)
+				for (int i = 0; i < MINIMAP_SCALE; i++)
+					for (int j = 0; j < MINIMAP_SCALE; j++)
+						gw->buffer[
+							MINIMAP_Y_OFFSET + y * MINIMAP_SCALE + i][
+							MINIMAP_X_OFFSET + x * MINIMAP_SCALE +
+							j] = wall_color;
+
+	player_minimap_x = MINIMAP_X_OFFSET + player->posX * MINIMAP_SCALE;
+	player_minimap_y = MINIMAP_Y_OFFSET + player->posY * MINIMAP_SCALE;
+	for (int i = -(MINIMAP_SCALE / 2); i < MINIMAP_SCALE / 2; i++)
+		for (int j = -(MINIMAP_SCALE / 2); j < MINIMAP_SCALE / 2; j++)
+			gw->buffer[player_minimap_y + i][
+				player_minimap_x + j] = player_color;
+
+	line_length = 2 * MINIMAP_SCALE, line_thickness = 3;
+	for (int t = -line_thickness; t <= line_thickness; t++)
+	{
+		dx = t * player->dirX;
+		dy = t * player->dirY;
+		for (int l = 0; l < line_length; l++)
+		{
+			x = player_minimap_x + l * player->dirX + dx;
+			y = player_minimap_y + l * player->dirY + dy;
+			if (x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT)
+				gw->buffer[y][x] = direction_color;
+		}
+	}
+}
+
+
+/**
+ * read_map_items - read map from a given file *file.
+ *
+ * @file: file to be readed.
+ * @map: where to store the file.
+ */
+void read_map_items(FILE *file, Map_t *map)
+{
+	int current_col = 0;
+	char ch, c;
+
+	while ((ch = fgetc(file)) != EOF)
+		switch (ch)
+		{
+			case ' ':
+			case '\n':
+			case '\r':
+			case '{':
+				continue;
+			case '}':
+			{
+				c = fgetc(file);
+				if (c == ',')
+				{
+					if (current_col)
+						map->cols = current_col;
+					map->rows += 1, current_col = 0;
+				}
+				else
+				ungetc(c, file);
+			}
+			break;
+			default:
+			{
+				if (isdigit(ch))
+				{
+					ungetc(ch, file);
+					fscanf(file, "%d", &map->map[map->rows][current_col]);
+					current_col++;
+				}
+			}
+			break;
+		}
+	map->rows += 1;
+}
+
+/**
+ * read_map - reads a map from a file.
+ *
+ * @map: where to store the map
+ * @file_path: the filepath to store the map.
+ *
+ * Return: the array of map or null.
+ */
+int **read_map(Map_t *map, const char *file_path)
+{
+	FILE *file = fopen(file_path, "r");
+	int max_rows = 100, max_cols = 100;
+
+	if (file == NULL)
+	{
+		perror("Error opening file");
+		return (NULL);
+	}
+
+	map->map = (int **)malloc(max_rows * sizeof(int *));
+	for (int i = 0; i < max_rows; i++)
+		map->map[i] = (int *)malloc(max_cols * sizeof(int));
+
+	read_map_items(file, map);
+	for (int i = map->rows; i < max_rows; i++)
+		free(map->map[i]);
+
+	fclose(file);
+	return (map->map);
+}
+
+/**
+ * free_map - function to free the map.
+ *
+ * @map: the map to be freed.
+ */
+void free_map(Map_t *map)
+{
+	if (!map || !(map->map))
+		return;
+
+	for (int i = 0; i < map->rows; i++)
+		free(map->map[i]);
+
+	free(map->map);
+}
+
+/**
+ * parse_game_map - parses a game map from argc, argv[1].
+ *
+ * @argc: argument count.
+ * @argv: the argument vector.
+ * @map: the map to be stored.
+ */
+void parse_game_map(int argc, char *argv[], Map_t *map)
+{
+	if (argc != 2)
+    {
+		perror("Usage maze <path to the file> ");
+        exit(EXIT_FAILURE);
+    }
+	read_map(map, argv[1]);
+}
+#include "../headers/main.h"
+#include <SDL2/SDL_keyboard.h>
+
+/**
+ * rotate - function to rotate the player through the maze.
+ *
+ * @gw: game window.
+ * @map: map to do.
+ * @player: the player to move.
+ * @flag: is he rotating left.
+ */
+void rotate(GameWindow_t *gw, Map_t *map, Player_t *player,
+	int flag)
+{
+	double oldDirX = 0, oldPlaneX = 0;
+
+	(void)map;
+	(void)gw;
+	if (flag)
+	{
+		oldDirX = player->dirX;
+		player->dirX = player->dirX * cos(ROTATION_SPEED
+			) - player->dirY * sin(ROTATION_SPEED);
+		player->dirY = oldDirX * sin(ROTATION_SPEED
+			) + player->dirY * cos(ROTATION_SPEED);
+		oldPlaneX = player->planeX;
+		player->planeX = player->planeX * cos(ROTATION_SPEED
+			) - player->planeY * sin(ROTATION_SPEED);
+		player->planeY = oldPlaneX * sin(ROTATION_SPEED
+			) + player->planeY * cos(ROTATION_SPEED);
+	}
+	else
+	{
+		oldDirX = player->dirX;
+		player->dirX = player->dirX * cos(-ROTATION_SPEED
+			) - player->dirY * sin(-ROTATION_SPEED);
+		player->dirY = oldDirX * sin(-ROTATION_SPEED
+			) + player->dirY * cos(-ROTATION_SPEED);
+		oldPlaneX = player->planeX;
+		player->planeX = player->planeX * cos(-ROTATION_SPEED
+			) - player->planeY * sin(-ROTATION_SPEED);
+		player->planeY = oldPlaneX * sin(-ROTATION_SPEED
+			) + player->planeY * cos(-ROTATION_SPEED);
+	}
+}
+
+/**
+ * move_player - function to move the player through the maze.
+ *
+ * @gw: game window.
+ * @map: map to use.
+ * @player: the player to move.
+ * @flag: is he moving forward?
+ */
+void move_player(GameWindow_t *gw, Map_t *map, Player_t *player,
+	int flag)
+{
+	(void)gw;
+	if (flag)
+	{
+		if (map->map[(int)(player->posX + player->dirX * MOVING_SPEED
+			)][(int)(player->posY)] == 0)
+			player->posX += player->dirX * MOVING_SPEED;
+		if (map->map[(int)(player->posX)][(int)(
+			player->posY + player->dirY * MOVING_SPEED)] == 0)
+			player->posY += player->dirY * MOVING_SPEED;
+	}
+	else
+	{
+		if (map->map[(int)(player->posX - player->dirX * MOVING_SPEED
+			)][(int)(player->posY)] == 0)
+			player->posX -= player->dirX * MOVING_SPEED;
+		if (map->map[(int)(player->posX)][(int)(
+			player->posY - player->dirY * MOVING_SPEED)] == 0)
+			player->posY -= player->dirY * MOVING_SPEED;
+	}
+}
+
+/**
+ * handle_keyboard - function to move the player through the maze.
+ *
+ * @gw: game window.
+ * @map: map_to_be_used.
+ * @player: the player to move.
+ */
+void handle_keyboard(GameWindow_t *gw, Map_t *map, Player_t *player)
+{
+	const Uint8 *state = SDL_GetKeyboardState(NULL);
+
+	if ((state[SDL_SCANCODE_W]) || (state[SDL_SCANCODE_S]))
+		move_player(gw, map, player, state[SDL_SCANCODE_W]);
+
+	if ((state[SDL_SCANCODE_A]) || (state[SDL_SCANCODE_D]))
+		rotate(gw, map, player, state[SDL_SCANCODE_A]);
+
+	if (state[SDL_SCANCODE_M] && (state[SDL_SCANCODE_LCTRL] ||
+		state[SDL_SCANCODE_RCTRL]))
+		gw->display_map = !(gw->display_map);
+
+	if (state[SDL_SCANCODE_B])
+		gw->game_state = GAME_PLAYING;
+
+	if (state[SDL_SCANCODE_ESCAPE])
+		gw->game_state = GAME_END;
+}
+#include "../headers/main.h"
+
+
+/**
+ * set_horizontal_raycaster_values - sets values for the horizontal.
+ *
+ * @raycaster: the raycaster struct.
+ * @player: the player.
+ * @x: the x value.
+ */
+void set_horizontal_raycaster_values(
+	RayCaster_t *raycaster, Player_t *player, int x)
+{
+	player->cameraX = 2 * x / (double)(SCREEN_WIDTH) - 1;
+	raycaster->hit = 0;
+	player->mapX = (int)(player->posX);
+	player->mapY = (int)(player->posY);
+	raycaster->rayDirX = player->dirX + player->planeX * player->cameraX;
+	raycaster->rayDirY = player->dirY + player->planeY * player->cameraX;
+
+	raycaster->deltaDistX = ((raycaster->rayDirX == 0) ? 1e30 :
+					fabs(1 / raycaster->rayDirX));
+	raycaster->deltaDistY = ((raycaster->rayDirY == 0) ? 1e30 :
+					fabs(1 / raycaster->rayDirY));
+
+	if (raycaster->rayDirX < 0)
+	{
+		raycaster->stepX = -1;
+		raycaster->sideDistX = ((player->posX - player->mapX
+						) * raycaster->deltaDistX);
+	}
+	else
+	{
+		raycaster->stepX = 1;
+		raycaster->sideDistX = ((player->mapX + 1.0 - player->posX
+						) * raycaster->deltaDistX);
+	}
+
+	if (raycaster->rayDirY < 0)
+	{
+		raycaster->stepY = -1;
+		raycaster->sideDistY = ((player->posY - player->mapY
+						) * raycaster->deltaDistY);
+	}
+	else
+	{
+		raycaster->stepY = 1;
+		raycaster->sideDistY = ((player->mapY + 1.0 - player->posY
+						) * raycaster->deltaDistY);
+	}
+}
+
+/**
+ * cast_to_next_block - casts a ray to the next block.
+ *
+ * @raycaster: the holder for variables used in raycasting.
+ * @player: the current player.
+ */
+void cast_to_next_block(RayCaster_t *raycaster, Player_t *player)
+{
+	if (raycaster && player)
+	{
+		if (raycaster->sideDistX < raycaster->sideDistY)
+		{
+			raycaster->sideDistX += raycaster->deltaDistX;
+			player->mapX += raycaster->stepX;
+			raycaster->side = 0;
+		}
+		else
+		{
+			raycaster->sideDistY += raycaster->deltaDistY;
+			player->mapY += raycaster->stepY;
+			raycaster->side = 1;
+		}
+
+		if (raycaster->map->map[player->mapX][player->mapY] > 0)
+			raycaster->hit = 1;
+	}
+}
+
+/**
+ * cast_rays - cast rays to the wall.
+ *
+ * @raycaster: the raycaster struct.
+ * @player: the player.
+ */
+void cast_rays(RayCaster_t *raycaster, Player_t *player)
+{
+	while (raycaster->hit == 0)
+		cast_to_next_block(raycaster, player);
+
+	if (raycaster->side == 0)
+		raycaster->perpWallDist = (player->mapX - player->posX +
+					(1 - raycaster->stepX) / 2) / raycaster->rayDirX;
+	else
+		raycaster->perpWallDist = (player->mapY - player->posY +
+					(1 - raycaster->stepY) / 2) / raycaster->rayDirY;
+
+	raycaster->lineHeight = (int)(SCREEN_HEIGHT / raycaster->perpWallDist);
+
+	raycaster->drawStart = -raycaster->lineHeight / 2 + SCREEN_HEIGHT / 2;
+	if (raycaster->drawStart < 0)
+		raycaster->drawStart = 0;
+
+	raycaster->drawEnd = raycaster->lineHeight / 2 + SCREEN_HEIGHT / 2;
+	if (raycaster->drawEnd >= SCREEN_HEIGHT)
+		raycaster->drawEnd = SCREEN_HEIGHT - 1;
+}
+
+/**
+ * draw_floor_celling - draw the world using raycasting.
+ *
+ * @gw: game window.
+ * @player: player.
+ */
+void draw_floor_celling(GameWindow_t *gw, Player_t *player)
+{
+	Uint32 color;
+	int p, cellX, cellY, tx, ty, floorTexture, ceilingTexture;
+	float rayDirX0, rayDirY0, rayDirX1, rayDirY1, posZ, rowDistance,
+		floorStepX, floorStepY, floorX, floorY;
+
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		rayDirX0 = player->dirX - player->planeX;
+		rayDirY0 = player->dirY - player->planeY;
+		rayDirX1 = player->dirX + player->planeX;
+		rayDirY1 = player->dirY + player->planeY;
+		p = y - SCREEN_HEIGHT / 2, posZ = 0.5 * SCREEN_HEIGHT;
+		rowDistance = posZ / p;
+		floorStepX = rowDistance * (rayDirX1 - rayDirX0) / SCREEN_WIDTH;
+		floorStepY = rowDistance * (rayDirY1 - rayDirY0) / SCREEN_WIDTH;
+		floorX = player->posX + rowDistance * rayDirX0;
+		floorY = player->posY + rowDistance * rayDirY0;
+
+		for (int x = 0; x < SCREEN_WIDTH; ++x)
+		{
+			cellX = (int)(floorX), cellY = (int)(floorY);
+
+			tx = (int)(TEXTURE_WIDTH * (floorX - cellX)) & (TEXTURE_WIDTH - 1);
+			ty = (int)(TEXTURE_HEIGHT * (floorY - cellY)) & (TEXTURE_HEIGHT - 1);
+
+			floorX += floorStepX, floorY += floorStepY;
+			floorTexture = 3, ceilingTexture = 6;
+
+			/* rendering the floor */
+			color = gw->gt->texture[floorTexture][TEXTURE_WIDTH * ty + tx];
+			gw->buffer[y][x] = ((color >> 1) & 8355711);
+
+			/* rendering the floor */
+			color = gw->gt->texture[ceilingTexture][TEXTURE_WIDTH * ty + tx];
+			gw->buffer[SCREEN_HEIGHT - y - 1][x] = ((color >> 1) & 8355711);
+		}
+	}
+}
+#include "../headers/main.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * get_texture_from_image - gets texture form the image at filename.
+ *
+ * @texture: the texture ** to be updated.
+ * @tw: texture width.
+ * @th: texture height.
+ * @filename: the filename for the item.
+ *
+ * Return: Allocation result.
+ */
+bool get_texture_from_image(Uint32 **texture,
+	unsigned long *tw, unsigned long *th, const char *filename)
+{
+	Uint32 *pixels;
+	SDL_Surface *formattedSurface, *surface;
+
+	surface = IMG_Load(filename);
+	if (!surface)
+	{
+		fprintf(stderr, "Failed to load image %s: %s\n", filename, IMG_GetError());
+		return (false);
+	}
+
+	formattedSurface = SDL_ConvertSurfaceFormat(
+		surface, SDL_PIXELFORMAT_ARGB8888, 0);
+	SDL_FreeSurface(surface);
+	if (!formattedSurface)
+	{
+		fprintf(stderr, "Failed to convert surface %s: %s\n",
+			filename, SDL_GetError());
+		return (false);
+	}
+
+	*tw = formattedSurface->w;
+	*th = formattedSurface->h;
+	*texture = (Uint32 *)malloc(sizeof(Uint32) * (*tw) * (*th));
+	if (!*texture)
+	{
+		fprintf(stderr, "Failed to allocate memory for texture\n");
+		SDL_FreeSurface(formattedSurface);
+		return (false);
+	}
+
+	pixels = (Uint32 *)formattedSurface->pixels;
+	for (unsigned long i = 0; i < (*tw) * (*th); ++i)
+		(*texture)[i] = pixels[i];
+
+	SDL_FreeSurface(formattedSurface);
+	return (true);
+}
+
+/**
+ * allocate_textures - allocates the textures from the listed images.
+ *
+ * @gt: game texture to be allocated.
+ */
+void allocate_textures(GameTexture_t *gt)
+{
+	bool error = false;
+	unsigned long tw, th;
+	const char *images[TEXTURE_SIZE] = {
+		"pics/eagle.png", "pics/redbrick.png",
+		"pics/purplestone.png", "pics/greystone.png",
+		"pics/bluestone.png", "pics/mossy.png",
+		"pics/wood.png", "pics/colorstone.png"
+	};
+
+	if (!gt)
+		return;
+
+	for (int i = 0; i < TEXTURE_SIZE; i++)
+	{
+		if (images[i] != NULL && images[i][0])
+			if (!get_texture_from_image(&(gt->texture[i]), &tw, &th, images[i]))
+				error = true;
+	}
+
+	if (error)
+	{
+		fprintf(stderr, "Unable to get some textures\n");
+		exit(1);
+	}
+}
+
+/**
+ * free_textures - deletes all the textures allocated.
+ *
+ * @gt: game texture to delete.
+ */
+void free_textures(GameTexture_t *gt)
+{
+	if (gt)
+	{
+		for (int i = 0; i < TEXTURE_SIZE; i++)
+		{
+			if (gt->texture[i])
+			{
+				free(gt->texture[i]);
+				gt->texture[i] = NULL;
+			}
+		}
+	}
+}
+#include "../headers/main.h"
+#include <stdio.h>
+
+/**
+ * leave_game - deallocates all the game resources.
+ *
+ * @gw: game window.
+ * @exit_status: the exit status for the window.
+ */
+void leave_game(GameWindow_t *gw, int exit_status)
+{
+	if (gw->renderer)
+		SDL_DestroyRenderer(gw->renderer);
+	if (gw->window)
+		SDL_DestroyWindow(gw->window);
+
+	IMG_Quit();
+
+	SDL_Quit();
+
+	exit(exit_status);
+}
+
+/**
+ * init_game - function that will initialize all the game resources.
+ *
+ * @gw: game window.
+ */
+void init_game(GameWindow_t *gw)
+{
+	if ((SDL_Init(SDL_INIT_VIDEO) != 0) &&
+		((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) != IMG_INIT_PNG))
+	{
+		fprintf(stderr, "SDL_Init Error: %s\n", SDL_GetError());
+		exit(1);
+	}
+
+	gw->instantiated = true;
+	gw->window = SDL_CreateWindow(
+		"Maze", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_FULLSCREEN);
+
+	if (gw->window == NULL)
+	{
+		fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
+		SDL_Quit();
+		exit(1);
+	}
+
+	gw->renderer = SDL_CreateRenderer(
+		gw->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (gw->renderer == NULL)
+	{
+		fprintf(stderr, "SDL_CreateRenderer Error: %s\n", SDL_GetError());
+		leave_game(gw, EXIT_FAILURE);
+	}
+}
+
+/**
+ * render - renders a texture into the winodw.
+ *
+ * @gw: game window type.
+ * @texture: the texture to be rendered.
+ */
+void render(GameWindow_t *gw, SDL_Texture *texture)
+{
+	SDL_UpdateTexture(texture, NULL, gw->buffer, SCREEN_WIDTH * sizeof(Uint32));
+	SDL_RenderClear(gw->renderer);
+	SDL_RenderCopy(gw->renderer, texture, NULL, NULL);
+	SDL_RenderPresent(gw->renderer);
+}
+#include "../headers/main.h"
+
+/**
+ * manage_current_texture - sets the horizontal line a specific value.
+ *
+ * @raycaster: the raycaster struct.
+ * @player: the player struct.
+ * @gw: the game window.
+ * @x: the x co-ordinate to be rendered.
+ */
+void manage_current_texture(RayCaster_t *raycaster,
+				Player_t *player, GameWindow_t *gw, int x)
+{
+	int texNum, texX, texY;
+	double wallX, step, texPos;
+	Uint32 color;
+
+	texNum = raycaster->map->map[player->mapX][player->mapY] - 1;
+	if (raycaster->side == 0)
+		wallX = (player->posY + raycaster->perpWallDist
+					* raycaster->rayDirY);
+	else
+		wallX = (player->posX + raycaster->perpWallDist
+					* raycaster->rayDirX);
+
+	wallX -= floor((wallX));
+	texX = (int)(wallX * (double)(texWidth));
+
+	if (raycaster->side == 0 && raycaster->rayDirX > 0)
+		texX = texWidth - texX - 1;
+	if (raycaster->side == 1 && raycaster->rayDirY < 0)
+		texX = texWidth - texX - 1;
+
+	step = 1.0 * texHeight / raycaster->lineHeight;
+	texPos = (raycaster->drawStart - SCREEN_HEIGHT / 2
+				+ raycaster->lineHeight / 2) * step;
+	for (int y = raycaster->drawStart; y < raycaster->drawEnd; y++)
+	{
+		texY = (int)texPos & (texHeight - 1);
+		texPos += step;
+		color = gw->gt->texture[texNum][texWidth * texY + texX];
+		/* making the color darker */
+		if (raycaster->side == 1)
+			color = (color >> 1) & 8355711;
+		gw->buffer[y][x] = color;
+	}
+}
+
+/**
+ * draw_walls - draw the walls using raycasting.
+ *
+ * @gw: game window.
+ * @player: player.
+ * @raycaster: the raycaster variables struct.
+ */
+void draw_walls(GameWindow_t *gw, Player_t *player,
+				RayCaster_t *raycaster)
+{
+	int x;
+
+	for (x = 0; x < SCREEN_WIDTH; x++)
+	{
+		set_horizontal_raycaster_values(raycaster, player, x);
+		cast_rays(raycaster, player);
+		manage_current_texture(raycaster, player, gw, x);
+	}
+}
+
+/**
+ * draw_world - draw the world using raycasting.
+ *
+ * @gw: game window.
+ * @player: player.
+ * @map: the map for the player.
+ */
+void draw_world(GameWindow_t *gw, Player_t *player, Map_t *map)
+{
+	RayCaster_t raycaster;
+
+	raycaster.map = map;
+
+	draw_floor_celling(gw, player);
+	draw_walls(gw, player, &raycaster);
+}
